@@ -10,6 +10,7 @@ function interpretKB(s)
     local i = 0
     local l = string.sub(s,i,i)
     local debug = false
+    local invert = false
 
     while i < #s do
         i = i + 1
@@ -56,10 +57,18 @@ function interpretKB(s)
             bytes[cursor] = bytes[cursor]^bytes[cursor + 1]
         elseif l == ":" then
             bytes[cursor] = bytes[cursor]^(1/bytes[cursor + 1])
+        elseif l == "~" then
+            invert = not invert
+        elseif l == "|" then
+            skip = true
         elseif l == "[" then
-            if bytes[cursor] ~= 0 then
+            if invert == false and bytes[cursor] ~= 0 then
                 inloop = true
-            else skip = true end
+            elseif invert == true and bytes[cursor] == 0 then
+                inloop = true
+            else
+                skip = true
+            end
         elseif l == "]" then
             while l ~= "[" do
                 l = string.sub(s,i,i)
@@ -67,9 +76,13 @@ function interpretKB(s)
                 end
             end
         elseif l == "{" then
-            if bytes[cursor] ~= 1 then
+            if invert == false and bytes[cursor] ~= 1 then
                 inloop = true
-            else skip = true end
+            elseif invert == true and bytes[cursor] == 1 then
+                inloop = true
+            else
+                skip = true
+            end
         elseif l == "}" then
             while l ~= "{" do
                 l = string.sub(s,i,i)
@@ -77,13 +90,16 @@ function interpretKB(s)
                 end
             end
         end
-        if l == "]" and bytes[cursor] ~= 0 then
+        if l == "]" and invert == false and bytes[cursor] ~= 0 then
+            skip = false
+        elseif l == "]" and invert == true and bytes[cursor] == 0 then
             skip = false
         end
-        if l == "}" and bytes[cursor] ~= 1 then
+        if l == "}" and invert == false and bytes[cursor] ~= 1 then
+            skip = false
+        elseif l == "}" and invert == true and bytes[cursor] == 1 then
             skip = false
         end
     end
 
-interpretKB("+!+++_.")
-interpretKB("-[------->+<]>-.")
+interpretKB("+{.+++.}")
